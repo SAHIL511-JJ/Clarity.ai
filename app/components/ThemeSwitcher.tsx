@@ -4,30 +4,31 @@ import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 
 const themes = [
-    { name: "light", label: "Light", icon: "☀️" },
-    { name: "dark", label: "Dark", icon: "🌙" },
-    { name: "purple", label: "Purple", icon: "💜" },
-    { name: "ocean", label: "Ocean", icon: "🌊" },
-    { name: "sunset", label: "Sunset", icon: "🌅" },
+    { name: "nebula", label: "Nebula", color: "bg-gradient-to-br from-[#00f2ff] to-[#7000ff]" },
+    { name: "midnight", label: "Midnight", color: "bg-gradient-to-br from-[#38bdf8] to-[#1e293b]" },
+    { name: "forest", label: "Forest", color: "bg-gradient-to-br from-[#34d399] to-[#064e3b]" },
+    { name: "sunset", label: "Sunset", color: "bg-gradient-to-br from-[#f472b6] to-[#fb923c]" },
+    { name: "crimson", label: "Crimson", color: "bg-gradient-to-br from-[#f87171] to-[#7f1d1d]" },
+    { name: "royal", label: "Royal", color: "bg-gradient-to-br from-[#fbbf24] to-[#1e3a8a]" },
 ] as const;
 
-export default function ThemeSwitcher() {
+export default function ThemeSwitcher({ className }: { className?: string }) {
     const { theme, setTheme } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
     const currentTheme = themes.find((t) => t.name === theme) || themes[0];
 
     return (
-        <div className="fixed top-4 right-4 z-50">
+        <div className={className || "hidden lg:block fixed top-4 right-4 z-50"}>
             <div className="relative">
                 {/* Theme Toggle Button */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-xl border border-white/60 px-4 py-2.5 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    className="flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-xl border border-white/60 px-3 py-1.5 shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     aria-label="Change theme"
                 >
-                    <span className="text-lg">{currentTheme.icon}</span>
-                    <span className="text-sm font-medium text-slate-700">
+                    <div className={`w-4 h-4 rounded-full ${currentTheme.color} shadow-sm`} />
+                    <span className="text-xs font-medium text-slate-700">
                         {currentTheme.label}
                     </span>
                     <svg
@@ -65,11 +66,11 @@ export default function ThemeSwitcher() {
                                         setIsOpen(false);
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${theme === t.name
-                                            ? "bg-primary-500/10 text-primary-600 font-medium"
-                                            : "text-slate-700 hover:bg-slate-100/50"
+                                        ? "bg-primary-500/10 text-primary-600 font-medium"
+                                        : "text-slate-700 hover:bg-slate-100/50"
                                         }`}
                                 >
-                                    <span className="text-lg">{t.icon}</span>
+                                    <div className={`w-4 h-4 rounded-full ${t.color} shadow-sm`} />
                                     <span>{t.label}</span>
                                     {theme === t.name && (
                                         <svg

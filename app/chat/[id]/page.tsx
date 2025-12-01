@@ -9,9 +9,16 @@ export default async function ChatPage({ params }: { params: ChatPageParams }) {
   const { id } = await params;
 
   return (
-    <div className="flex flex-col h-full">
-      <ChatWindow conversationId={id} />
-      <ChatInput conversationId={id} />
-    </div>
+    <>
+      {/* Scrollable chat area */}
+      <div className="flex-1 overflow-hidden">
+        <ChatWindow />
+      </div>
+
+      {/* Fixed input at bottom - separate from scroll */}
+      <div className="flex-none">
+        <ChatInput conversationId={id} />
+      </div>
+    </>
   );
 }

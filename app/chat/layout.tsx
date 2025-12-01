@@ -1,31 +1,50 @@
+"use client";
+
 import Sidebar from "./components/Sidebar";
-import { ThemeProvider } from "../contexts/ThemeContext";
 import ThemeSwitcher from "../components/ThemeSwitcher";
+import React, { useState } from "react";
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <ThemeProvider>
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-[var(--nebula-bg)] text-[var(--text-primary)] transition-colors duration-300 relative">
+      <div className="nebula-bg absolute inset-0 z-0" />
+      <ThemeSwitcher />
+
+      {/* Mobile Sidebar Overlay */}
       <div
-        className="flex h-screen flex-col gap-6 px-4 py-4 lg:flex-row lg:gap-8 lg:px-8 lg:py-6 transition-colors duration-300"
-        style={{ background: "linear-gradient(180deg, var(--bg-primary), var(--bg-secondary))" }}
-      >
-        <div className="lg:h-full lg:w-[320px] lg:flex-none">
-          <Sidebar />
-        </div>
+        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity lg:hidden ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-        <div
-          className="flex flex-1 flex-col overflow-hidden rounded-3xl shadow-glass backdrop-blur-2xl transition-all duration-300"
-          style={{
-            backgroundColor: "var(--chat-bg)",
-            borderWidth: "1px",
-            borderColor: "var(--chat-border)"
-          }}
-        >
-          {children}
-        </div>
-
-        <ThemeSwitcher />
+      {/* Sidebar Container */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-300 lg:relative lg:translate-x-0 lg:z-10 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}>
+        <Sidebar />
       </div>
-    </ThemeProvider>
+
+      {/* Main Content */}
+      <main className="relative flex flex-1 flex-col overflow-hidden z-10">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between px-4 py-3 lg:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 -ml-2 text-white/70 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="font-semibold tracking-wide">CLARITY</span>
+          <div className="w-8 flex justify-end">
+            <ThemeSwitcher className="relative z-10 scale-75 origin-right" />
+          </div>
+        </div>
+
+        {children}
+      </main>
+    </div>
   );
 }

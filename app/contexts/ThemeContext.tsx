@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "purple" | "ocean" | "sunset";
+type Theme = "nebula" | "midnight" | "forest" | "sunset" | "crimson" | "royal";
 
 type ThemeContextType = {
     theme: Theme;
@@ -12,7 +12,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<Theme>("light");
+    const [theme, setThemeState] = useState<Theme>("nebula");
 
     useEffect(() => {
         // Load theme from localStorage
