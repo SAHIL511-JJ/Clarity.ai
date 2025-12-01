@@ -74,9 +74,9 @@ export default function ChatInput({ conversationId }: { conversationId?: string 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 p-2 sm:p-6 flex justify-center pointer-events-none lg:pl-[280px] transition-all duration-300">
       <div
-        className={`pointer-events-auto w-full max-w-3xl rounded-[1.5rem] sm:rounded-[2rem] glass-panel transition-all duration-300 flex items-end gap-2 p-1.5 sm:p-2 ${isFocused
+        className={`pointer-events-auto w-full max-w-3xl rounded-[1.5rem] sm:rounded-[2rem] transition-all duration-300 flex items-end gap-2 p-1.5 sm:p-2 backdrop-blur-xl border ${isFocused
           ? "shadow-[0_0_30px_rgba(0,242,255,0.15)] border-[var(--nebula-primary)]/30 bg-[var(--glass-surface)]"
-          : "bg-black/40 border-white/10 backdrop-blur-xl"
+          : "bg-transparent border-white/5"
           }`}
       >
         {/* Attach Button */}
