@@ -229,13 +229,25 @@ The application uses Tailwind CSS with custom glass-themed components. The glass
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-The easiest way to deploy this application is through [Vercel](https://vercel.com):
+### Deploy to Vercel (Recommended)
 
-1. Push your code to a Git repository
-2. Connect your repository to Vercel
-3. Add your environment variables in the Vercel dashboard
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SAHIL511-JJ/ai-integration)
+
+The easiest way to deploy this application is through [Vercel](https://vercel.com). See our comprehensive [Vercel Deployment Guide](VERCEL_DEPLOY.md) for step-by-step instructions.
+
+**Quick Steps:**
+1. Push your code to GitHub
+2. Import your repository on Vercel
+3. Add environment variables (see [.env.example](.env.example))
 4. Deploy!
+
+**Required Environment Variables for Vercel:**
+- `GROQ_API_KEY` - Your Groq API key
+- `GROQ_MODEL` - AI model (e.g., `llama-3.3-70b-versatile`)
+- `NEXTAUTH_SECRET` - Generate with `openssl rand -base64 32`
+- `NEXT_PUBLIC_APP_URL` - Your Vercel app URL
+
+For detailed deployment instructions, troubleshooting, and post-deployment configuration, see [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md).
 
 ### Other Platforms
 This application can also be deployed on platforms that support Next.js 16:

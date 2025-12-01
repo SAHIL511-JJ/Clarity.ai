@@ -75,8 +75,8 @@ export default function ChatInput({ conversationId }: { conversationId?: string 
     <div className="fixed bottom-0 left-0 right-0 z-30 p-2 sm:p-6 flex justify-center pointer-events-none lg:pl-[280px] transition-all duration-300">
       <div
         className={`pointer-events-auto w-full max-w-3xl rounded-[1.5rem] sm:rounded-[2rem] glass-panel transition-all duration-300 flex items-end gap-2 p-1.5 sm:p-2 ${isFocused
-            ? "shadow-[0_0_30px_rgba(0,242,255,0.15)] border-[var(--nebula-primary)]/30 bg-[var(--glass-surface)]"
-            : "bg-black/40 border-white/10 backdrop-blur-xl"
+          ? "shadow-[0_0_30px_rgba(0,242,255,0.15)] border-[var(--nebula-primary)]/30 bg-[var(--glass-surface)]"
+          : "bg-black/40 border-white/10 backdrop-blur-xl"
           }`}
       >
         {/* Attach Button */}
@@ -112,10 +112,10 @@ export default function ChatInput({ conversationId }: { conversationId?: string 
         {/* Send Button */}
         <button
           onClick={sendMessage}
-          disabled={streaming || !value.trim()}
-          className={`p-3 rounded-full transition-all duration-300 flex items-center justify-center ${value.trim() && !streaming
-              ? "bg-gradient-to-r from-[var(--nebula-secondary)] to-[var(--nebula-primary)] text-white shadow-[0_0_15px_rgba(112,0,255,0.4)] hover:scale-105 hover:shadow-[0_0_25px_rgba(0,242,255,0.5)]"
-              : "bg-white/5 text-[var(--text-tertiary)] cursor-not-allowed"
+          disabled={streaming}
+          className={`p-3 rounded-full transition-all duration-300 flex items-center justify-center ${!streaming
+            ? "bg-gradient-to-r from-[var(--nebula-secondary)] to-[var(--nebula-primary)] text-white shadow-[0_0_15px_rgba(112,0,255,0.4)] hover:scale-105 hover:shadow-[0_0_25px_rgba(0,242,255,0.5)] cursor-pointer"
+            : "bg-white/5 text-[var(--text-tertiary)] cursor-not-allowed"
             }`}
         >
           {streaming ? (
