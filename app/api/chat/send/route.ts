@@ -1,13 +1,9 @@
 // app/api/chat/send/route.ts
 
 import { NextResponse } from "next/server";
-// import prisma from "@/lib/prisma"; // DISABLED: Database temporarily removed
+import prisma from "@/lib/prisma";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
-// import { chatWithOpenRouter } from "@/lib/openrouter"; // Switched to Gemini for free quota
-
-// MOCK: In-memory conversation storage (resets on server restart)
-const mockConversations: Record<string, Array<{ role: string; content: string }>> = {};
 
 // Groq API function with STREAMING support
 async function chatWithGroq(messages: Array<{ role: string; content: string }>, stream = false) {
@@ -49,11 +45,11 @@ async function chatWithGroq(messages: Array<{ role: string; content: string }>, 
 }
 
 export async function POST(req: Request) {
-  // Removed authentication for public deployment
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  // }
+  // Check authentication
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const { conversationId, message } = await req.json();
@@ -62,31 +58,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
-    // MOCK: Generate conversation ID if not provided
     let convId = conversationId;
+
+    // Create new conversation if not provided
     if (!convId) {
-      convId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newConversation = await prisma.conversation.create({
+        data: {
+          title: message.substring(0, 50) + (message.length > 50 ? "..." : ""),
+          userId: session.user.id,
+        },
+      });
+      convId = newConversation.id;
     }
 
-    // MOCK: Initialize conversation history if it doesn't exist
-    if (!mockConversations[convId]) {
-      mockConversations[convId] = [];
-    }
-
-    // MOCK: Add user message to in-memory storage
-    mockConversations[convId].push({
-      role: "user",
-      content: message,
+    // Save user message to database
+    await prisma.message.create({
+      data: {
+        role: "user",
+        content: message,
+        conversationId: convId,
+        userId: session.user.id,
+      },
     });
 
     // Get conversation history (last 30 messages)
-    const history = mockConversations[convId].slice(-30);
+    const history = await prisma.message.findMany({
+      where: { conversationId: convId },
+      orderBy: { createdAt: "asc" },
+      take: 30,
+    });
 
     // Add system message for proper formatting
     const messages = [
       {
         role: "system",
-        content: "You are a helpful assistant. Always format code blocks using markdown syntax with triple backticks (```) followed by the language name. For example: ```javascript\ncode here\n```",
+        content: "You are a helpful assistant. Always format code blocks using markdown syntax with triple backticks (```) followed by the language name. For example: ```javascript\\ncode here\\n```",
       },
       ...history.map((m) => ({
         role: (m.role === "assistant" ? "assistant" : "user") as
@@ -119,7 +125,7 @@ export async function POST(req: Request) {
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+            const lines = chunk.split("\\n").filter((line) => line.trim() !== "");
 
             for (const line of lines) {
               if (line.startsWith("data: ")) {
@@ -146,10 +152,14 @@ export async function POST(req: Request) {
         } catch (error) {
           console.error("Stream error:", error);
         } finally {
-          // Save the complete response to mock storage
-          mockConversations[convId].push({
-            role: "assistant",
-            content: fullText,
+          // Save the complete AI response to database
+          await prisma.message.create({
+            data: {
+              role: "assistant",
+              content: fullText,
+              conversationId: convId,
+              userId: session.user.id,
+            },
           });
           controller.close();
         }

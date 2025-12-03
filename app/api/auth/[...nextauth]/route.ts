@@ -1,37 +1,44 @@
 // app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-// import { PrismaClient } from "@prisma/client"; // DISABLED: Database temporarily removed
-// import bcrypt from "bcrypt";
+import NextAuth, { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-// MOCK: Hardcoded test user (accepts any email/password for now)
-const MOCK_USER = {
-  id: "mock-user-1",
-  email: "test@example.com",
-  name: "Test User",
-};
-
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma) as any,
   providers: [
-    CredentialsProvider({
-      name: "credentials",
-      credentials: { email: {}, password: {} },
-
-      async authorize(credentials: any) {
-        // MOCK: Accept any credentials and return mock user
-        // In production, you would validate against the database
-        if (credentials?.email && credentials?.password) {
-          return MOCK_USER;
-        }
-        return null;
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
-  session: { strategy: "jwt" as const },
+  session: {
+    strategy: "jwt",
+  },
+
   secret: process.env.NEXTAUTH_SECRET,
+
+  callbacks: {
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+  },
+
+  pages: {
+    signIn: "/login",
+  },
 };
 
 const handler = NextAuth(authOptions);

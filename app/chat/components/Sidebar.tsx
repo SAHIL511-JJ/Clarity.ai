@@ -1,25 +1,78 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ThemeSwitcher from "../../components/ThemeSwitcher";
+import { useSession, signOut } from "next-auth/react";
+
+interface Conversation {
+  id: string;
+  title: string;
+  updatedAt: string;
+  messages: Array<{ content: string }>;
+  _count: { messages: number };
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const conversations = [
-    { id: "1", title: "Project Nebula Design", date: "Today" },
-    { id: "2", title: "React Optimization", date: "Yesterday" },
-    { id: "3", title: "AI Integration Plan", date: "Nov 28" },
-  ];
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  const fetchConversations = async () => {
+    try {
+      const response = await fetch("/api/chat/conversations");
+      if (response.ok) {
+        const data = await response.json();
+        setConversations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteConversation = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this conversation?")) return;
+
+    try {
+      const response = await fetch(`/api/chat/conversations?id=${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setConversations(conversations.filter((c) => c.id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+    }
+  };
+
+  const filteredConversations = conversations.filter((conv) =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
 
   return (
     <aside className="h-full w-full p-2 sm:p-4 flex flex-col gap-4">
       {/* Glass Panel Container */}
       <div className="glass-panel h-full w-full rounded-3xl flex flex-col overflow-hidden relative">
-
         {/* Header */}
         <div className="p-5 pb-0">
           <Link href="/" className="flex items-center gap-3 group mb-6">
@@ -48,8 +101,6 @@ export default function Sidebar() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-
         </div>
 
         {/* Navigation */}
@@ -70,43 +121,85 @@ export default function Sidebar() {
             <h3 className="px-4 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
               Recent
             </h3>
-            {conversations.map((chat) => (
-              <Link
-                key={chat.id}
-                href={`/chat/${chat.id}`}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-all duration-200 group border border-transparent hover:border-white/5"
-              >
-                <div className="w-2 h-2 rounded-full bg-[var(--nebula-primary)] opacity-0 group-hover:opacity-100 shadow-[0_0_10px_var(--nebula-primary)] transition-all duration-300" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-white truncate transition-colors">
-                    {chat.title}
-                  </p>
-                  <p className="text-xs text-[var(--text-tertiary)] truncate">
-                    {chat.date}
-                  </p>
+            {loading ? (
+              <div className="px-4 py-8 text-center text-[var(--text-tertiary)] text-sm">
+                Loading conversations...
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="px-4 py-8 text-center text-[var(--text-tertiary)] text-sm">
+                {searchQuery ? "No conversations found" : "No conversations yet"}
+              </div>
+            ) : (
+              filteredConversations.map((chat) => (
+                <div
+                  key={chat.id}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/5 transition-all duration-200 group border border-transparent hover:border-white/5"
+                >
+                  <Link
+                    href={`/chat/${chat.id}`}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-[var(--nebula-primary)] opacity-0 group-hover:opacity-100 shadow-[0_0_10px_var(--nebula-primary)] transition-all duration-300" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-white truncate transition-colors">
+                        {chat.title}
+                      </p>
+                      <p className="text-xs text-[var(--text-tertiary)] truncate">
+                        {formatDate(chat.updatedAt)} · {chat._count.messages} messages
+                      </p>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => deleteConversation(chat.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg transition-all"
+                    title="Delete conversation"
+                  >
+                    <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
-              </Link>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
         {/* User Profile */}
         <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
-          <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-white/5 transition-colors group">
+          <div className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-white/5 transition-colors group">
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500 p-[2px]">
-              <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                <span className="text-xs font-bold text-white">TD</span>
-              </div>
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  className="w-full h-full rounded-full"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">
+                    {session?.user?.name?.charAt(0) || "U"}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-white group-hover:text-[var(--nebula-primary)] transition-colors">Terry A Davis</p>
-              <p className="text-xs text-[var(--text-tertiary)]">Pro Plan</p>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-medium text-white group-hover:text-[var(--nebula-primary)] transition-colors truncate">
+                {session?.user?.name || "User"}
+              </p>
+              <p className="text-xs text-[var(--text-tertiary)] truncate">
+                {session?.user?.email}
+              </p>
             </div>
-            <svg className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="Sign out"
+            >
+              <svg className="w-5 h-5 text-[var(--text-tertiary)] hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </aside>
