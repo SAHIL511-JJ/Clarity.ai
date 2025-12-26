@@ -7,11 +7,11 @@ $envFile = "c:\ai-chat-app\.env.local"
 $newVars = @"
 
 # ===== GOOGLE OAUTH (Added for authentication) =====
-GOOGLE_CLIENT_ID=1044865840144-qlcs29jf2ana63t4e9gsfo5onm676832.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
 
 # NextAuth Configuration
-NEXTAUTH_SECRET=++nSTKTYrMOkCIWztspLR78R8iVPXIx46uX2OzWdA4w=
+NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET
 NEXTAUTH_URL=http://localhost:3000
 "@
 
