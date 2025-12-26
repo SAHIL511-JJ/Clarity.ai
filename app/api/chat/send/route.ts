@@ -58,7 +58,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
+
     let convId = conversationId;
+
+    // If conversationId provided, verify ownership
+    if (convId) {
+      const existingConv = await prisma.conversation.findFirst({
+        where: {
+          id: convId,
+          userId: session.user.id,
+        },
+      });
+
+      if (!existingConv) {
+        console.log("Conversation ownership check failed:", {
+          convId,
+          sessionUserId: session.user.id,
+        });
+        return NextResponse.json({ error: "Conversation not found or access denied" }, { status: 404 });
+      }
+    }
 
     // Create new conversation if not provided
     if (!convId) {
@@ -125,7 +144,7 @@ export async function POST(req: Request) {
             if (done) break;
 
             const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\\n").filter((line) => line.trim() !== "");
+            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
 
             for (const line of lines) {
               if (line.startsWith("data: ")) {

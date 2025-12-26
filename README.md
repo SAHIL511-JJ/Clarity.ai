@@ -4,7 +4,8 @@ A premium glass-themed AI chat application built with Next.js 16, featuring mode
 
 ## ✨ Features
 
-- 🗨️ Real-time AI chat interface with smooth interactions
+- 🗨️ Real-time AI chat interface with smooth interactions and premium glass-themed UI
+- 🎨 Enhanced messaging layout with dedicated `ChatWindow` and `ChatInput` components
 - 🎨 Glassmorphism design with elegant visual effects
 - 🔐 Authentication powered by Supabase
 - 💬 Conversation history management

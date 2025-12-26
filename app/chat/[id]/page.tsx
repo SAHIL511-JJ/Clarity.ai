@@ -12,7 +12,7 @@ export default async function ChatPage({ params }: { params: ChatPageParams }) {
     <>
       {/* Scrollable chat area */}
       <div className="flex-1 overflow-hidden">
-        <ChatWindow />
+        <ChatWindow conversationId={id} />
       </div>
 
       {/* Fixed input at bottom - separate from scroll */}

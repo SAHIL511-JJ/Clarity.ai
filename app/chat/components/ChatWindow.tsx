@@ -13,7 +13,11 @@ type Msg = {
   content: string;
 };
 
-export default function ChatWindow() {
+interface ChatWindowProps {
+  conversationId?: string;
+}
+
+export default function ChatWindow({ conversationId }: ChatWindowProps) {
   const [messages, setMessages] = useState<Msg[]>([
     {
       id: "welcome",
@@ -22,9 +26,56 @@ export default function ChatWindow() {
     },
   ]);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch existing messages when conversationId changes
+  useEffect(() => {
+    if (conversationId) {
+      fetchMessages(conversationId);
+    } else {
+      // Reset to welcome message for new chats
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: "Systems online. I am Clarity. Ready to explore the unknown?",
+        },
+      ]);
+    }
+  }, [conversationId]);
+
+  const fetchMessages = async (convId: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/chat/messages?conversationId=${convId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length > 0) {
+          setMessages(data.map((msg: any) => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+          })));
+        } else {
+          // No messages yet, show welcome
+          setMessages([
+            {
+              id: "welcome",
+              role: "assistant",
+              content: "Systems online. I am Clarity. Ready to explore the unknown?",
+            },
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -105,7 +156,7 @@ export default function ChatWindow() {
   };
 
   return (
-    <div ref={containerRef} className="relative flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden custom-scrollbar px-2 sm:px-4 overscroll-y-contain">
+    <div ref={containerRef} className="relative h-full w-full overflow-y-auto overflow-x-hidden custom-scrollbar px-2 sm:px-4 overscroll-y-contain">
       <div className="relative mx-auto flex min-h-full max-w-4xl flex-col justify-start py-16 sm:py-8 pb-24 sm:pb-28">
         <div className="space-y-6 sm:space-y-8">
           {messages.map((message) => {
